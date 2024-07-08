@@ -6,7 +6,7 @@ import re
 from typing import Optional, List, Type
 import torch
 from library import sdxl_original_unet
-from library.utils import setup_logging
+
 
 
 

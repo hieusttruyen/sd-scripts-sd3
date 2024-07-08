@@ -37,12 +37,12 @@ from library.custom_train_functions import (
     apply_debiased_estimation,
     apply_masked_loss,
 )
-from library.utils import setup_logging, add_logging_arguments
 
-setup_logging()
-import logging
 
-logger = logging.getLogger(__name__)
+
+
+
+
 
 # perlin_noise,
 
@@ -51,7 +51,7 @@ def train(args):
     train_util.verify_training_args(args)
     train_util.prepare_dataset_args(args, False)
     deepspeed_utils.prepare_deepspeed_args(args)
-    setup_logging(args, reset=True)
+    
 
     cache_latents = args.cache_latents
 
@@ -64,11 +64,11 @@ def train(args):
     if args.dataset_class is None:
         blueprint_generator = BlueprintGenerator(ConfigSanitizer(True, False, args.masked_loss, True))
         if args.dataset_config is not None:
-            logger.info(f"Load dataset config from {args.dataset_config}")
+            print(f"Load dataset config from {args.dataset_config}")
             user_config = config_util.load_user_config(args.dataset_config)
             ignored = ["train_data_dir", "reg_data_dir"]
             if any(getattr(args, attr) is not None for attr in ignored):
-                logger.warning(
+                print(
                     "ignore following options because config file is found: {0} / 設定ファイルが利用されるため以下のオプションは無視されます: {0}".format(
                         ", ".join(ignored)
                     )
@@ -103,13 +103,13 @@ def train(args):
         ), "when caching latents, either color_aug or random_crop cannot be used / latentをキャッシュするときはcolor_augとrandom_cropは使えません"
 
     # acceleratorを準備する
-    logger.info("prepare accelerator")
+    print("prepare accelerator")
 
     if args.gradient_accumulation_steps > 1:
-        logger.warning(
+        print(
             f"gradient_accumulation_steps is {args.gradient_accumulation_steps}. accelerate does not support gradient_accumulation_steps when training multiple models (U-Net and Text Encoder), so something might be wrong"
         )
-        logger.warning(
+        print(
             f"gradient_accumulation_stepsが{args.gradient_accumulation_steps}に設定されています。accelerateは複数モデル（U-NetおよびText Encoder）の学習時にgradient_accumulation_stepsをサポートしていないため結果は未知数です"
         )
 
@@ -476,7 +476,7 @@ def train(args):
         train_util.save_sd_model_on_train_end(
             args, src_path, save_stable_diffusion_format, use_safetensors, save_dtype, epoch, global_step, text_encoder, unet, vae
         )
-        logger.info("model saved.")
+        print("model saved.")
 
 
 def setup_parser() -> argparse.ArgumentParser:

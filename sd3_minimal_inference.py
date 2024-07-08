@@ -17,12 +17,12 @@ from library.device_utils import init_ipex, get_preferred_device
 
 init_ipex()
 
-from library.utils import setup_logging
 
-setup_logging()
-import logging
 
-logger = logging.getLogger(__name__)
+
+
+
+
 
 from library import sd3_models, sd3_utils
 
@@ -177,40 +177,40 @@ if __name__ == "__main__":
     # TODO test with separated safetenors files for each model
 
     # load state dict
-    logger.info(f"Loading SD3 models from {args.ckpt_path}...")
+    print(f"Loading SD3 models from {args.ckpt_path}...")
     state_dict = load_file(args.ckpt_path)
 
     if "text_encoders.clip_g.transformer.text_model.embeddings.position_embedding.weight" in state_dict:
         # found clip_g: remove prefix "text_encoders.clip_g."
-        logger.info("clip_g is included in the checkpoint")
+        print("clip_g is included in the checkpoint")
         clip_g_sd = {}
         prefix = "text_encoders.clip_g."
         for k, v in list(state_dict.items()):
             if k.startswith(prefix):
                 clip_g_sd[k[len(prefix) :]] = state_dict.pop(k)
     else:
-        logger.info(f"Lodaing clip_g from {args.clip_g}...")
+        print(f"Lodaing clip_g from {args.clip_g}...")
         clip_g_sd = load_file(args.clip_g)
         for key in list(clip_g_sd.keys()):
             clip_g_sd["transformer." + key] = clip_g_sd.pop(key)
 
     if "text_encoders.clip_l.transformer.text_model.embeddings.position_embedding.weight" in state_dict:
         # found clip_l: remove prefix "text_encoders.clip_l."
-        logger.info("clip_l is included in the checkpoint")
+        print("clip_l is included in the checkpoint")
         clip_l_sd = {}
         prefix = "text_encoders.clip_l."
         for k, v in list(state_dict.items()):
             if k.startswith(prefix):
                 clip_l_sd[k[len(prefix) :]] = state_dict.pop(k)
     else:
-        logger.info(f"Lodaing clip_l from {args.clip_l}...")
+        print(f"Lodaing clip_l from {args.clip_l}...")
         clip_l_sd = load_file(args.clip_l)
         for key in list(clip_l_sd.keys()):
             clip_l_sd["transformer." + key] = clip_l_sd.pop(key)
 
     if "text_encoders.t5xxl.transformer.encoder.block.0.layer.0.SelfAttention.k.weight" in state_dict:
         # found t5xxl: remove prefix "text_encoders.t5xxl."
-        logger.info("t5xxl is included in the checkpoint")
+        print("t5xxl is included in the checkpoint")
         if not args.do_not_use_t5xxl:
             t5xxl_sd = {}
             prefix = "text_encoders.t5xxl."
@@ -218,19 +218,19 @@ if __name__ == "__main__":
                 if k.startswith(prefix):
                     t5xxl_sd[k[len(prefix) :]] = state_dict.pop(k)
         else:
-            logger.info("but not used")
+            print("but not used")
             for key in list(state_dict.keys()):
                 if key.startswith("text_encoders.t5xxl."):
                     state_dict.pop(key)
             t5xxl_sd = None
     elif args.t5xxl:
         assert not args.do_not_use_t5xxl, "t5xxl is not used but specified"
-        logger.info(f"Lodaing t5xxl from {args.t5xxl}...")
+        print(f"Lodaing t5xxl from {args.t5xxl}...")
         t5xxl_sd = load_file(args.t5xxl)
         for key in list(t5xxl_sd.keys()):
             t5xxl_sd["transformer." + key] = t5xxl_sd.pop(key)
     else:
-        logger.info("t5xxl is not used")
+        print("t5xxl is not used")
         t5xxl_sd = None
 
     use_t5xxl = t5xxl_sd is not None
@@ -246,80 +246,80 @@ if __name__ == "__main__":
             state_dict[k[len(mmdit_prefix) :]] = state_dict.pop(k)
 
     # load tokenizers
-    logger.info("Loading tokenizers...")
+    print("Loading tokenizers...")
     tokenizer = sd3_models.SD3Tokenizer(use_t5xxl)  # combined tokenizer
 
     # load models
-    # logger.info("Create MMDiT from SD3 checkpoint...")
+    # print("Create MMDiT from SD3 checkpoint...")
     # mmdit = sd3_utils.create_mmdit_from_sd3_checkpoint(state_dict)
-    logger.info("Create MMDiT")
+    print("Create MMDiT")
     mmdit = sd3_models.create_mmdit_sd3_medium_configs(args.attn_mode)
 
-    logger.info("Loading state dict...")
+    print("Loading state dict...")
     info = mmdit.load_state_dict(state_dict)
-    logger.info(f"Loaded MMDiT: {info}")
+    print(f"Loaded MMDiT: {info}")
 
-    logger.info(f"Move MMDiT to {device} and {sd3_dtype}...")
+    print(f"Move MMDiT to {device} and {sd3_dtype}...")
     mmdit.to(device, dtype=sd3_dtype)
     mmdit.eval()
 
     # load VAE
-    logger.info("Create VAE")
+    print("Create VAE")
     vae = sd3_models.SDVAE()
-    logger.info("Loading state dict...")
+    print("Loading state dict...")
     info = vae.load_state_dict(vae_sd)
-    logger.info(f"Loaded VAE: {info}")
+    print(f"Loaded VAE: {info}")
 
-    logger.info(f"Move VAE to {device} and {sd3_dtype}...")
+    print(f"Move VAE to {device} and {sd3_dtype}...")
     vae.to(device, dtype=sd3_dtype)
     vae.eval()
 
     # load text encoders
-    logger.info("Create clip_l")
+    print("Create clip_l")
     clip_l = sd3_models.create_clip_l(device, sd3_dtype, clip_l_sd)
 
-    logger.info("Loading state dict...")
+    print("Loading state dict...")
     info = clip_l.load_state_dict(clip_l_sd)
-    logger.info(f"Loaded clip_l: {info}")
+    print(f"Loaded clip_l: {info}")
 
-    logger.info(f"Move clip_l to {device} and {sd3_dtype}...")
+    print(f"Move clip_l to {device} and {sd3_dtype}...")
     clip_l.to(device, dtype=sd3_dtype)
     clip_l.eval()
-    logger.info(f"Set attn_mode to {args.attn_mode}...")
+    print(f"Set attn_mode to {args.attn_mode}...")
     clip_l.set_attn_mode(args.attn_mode)
 
-    logger.info("Create clip_g")
+    print("Create clip_g")
     clip_g = sd3_models.create_clip_g(device, sd3_dtype, clip_g_sd)
 
-    logger.info("Loading state dict...")
+    print("Loading state dict...")
     info = clip_g.load_state_dict(clip_g_sd)
-    logger.info(f"Loaded clip_g: {info}")
+    print(f"Loaded clip_g: {info}")
 
-    logger.info(f"Move clip_g to {device} and {sd3_dtype}...")
+    print(f"Move clip_g to {device} and {sd3_dtype}...")
     clip_g.to(device, dtype=sd3_dtype)
     clip_g.eval()
-    logger.info(f"Set attn_mode to {args.attn_mode}...")
+    print(f"Set attn_mode to {args.attn_mode}...")
     clip_g.set_attn_mode(args.attn_mode)
 
     if use_t5xxl:
-        logger.info("Create t5xxl")
+        print("Create t5xxl")
         t5xxl = sd3_models.create_t5xxl(device, sd3_dtype, t5xxl_sd)
 
-        logger.info("Loading state dict...")
+        print("Loading state dict...")
         info = t5xxl.load_state_dict(t5xxl_sd)
-        logger.info(f"Loaded t5xxl: {info}")
+        print(f"Loaded t5xxl: {info}")
 
-        logger.info(f"Move t5xxl to {device} and {sd3_dtype}...")
+        print(f"Move t5xxl to {device} and {sd3_dtype}...")
         t5xxl.to(device, dtype=sd3_dtype)
         # t5xxl.to("cpu", dtype=torch.float32) # run on CPU
         t5xxl.eval()
-        logger.info(f"Set attn_mode to {args.attn_mode}...")
+        print(f"Set attn_mode to {args.attn_mode}...")
         t5xxl.set_attn_mode(args.attn_mode)
     else:
         t5xxl = None
 
     # prepare embeddings
-    logger.info("Encoding prompts...")
+    print("Encoding prompts...")
     # embeds, pooled_embed
     lg_out, t5_out, pooled = sd3_utils.get_cond(args.prompt, tokenizer, clip_l, clip_g, t5xxl)
     cond = torch.cat([lg_out, t5_out], dim=-2), pooled
@@ -328,7 +328,7 @@ if __name__ == "__main__":
     neg_cond = torch.cat([lg_out, t5_out], dim=-2), pooled
 
     # generate image
-    logger.info("Generating image...")
+    print("Generating image...")
     latent_sampled = do_sample(
         target_height, target_width, None, seed, cond, neg_cond, mmdit, steps, guidance_scale, sd3_dtype, device
     )
@@ -348,4 +348,4 @@ if __name__ == "__main__":
     output_path = os.path.join(output_dir, f"{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.png")
     out_image.save(output_path)
 
-    logger.info(f"Saved image to {output_path}")
+    print(f"Saved image to {output_path}")

@@ -15,7 +15,7 @@ from transformers import CLIPFeatureExtractor, CLIPTextModel, CLIPTokenizer
 from diffusers import SchedulerMixin, StableDiffusionPipeline
 from diffusers.models import AutoencoderKL, UNet2DConditionModel
 from diffusers.pipelines.stable_diffusion import StableDiffusionPipelineOutput, StableDiffusionSafetyChecker
-from diffusers.utils 
+from diffusers.utils import logging
 from PIL import Image
 
 from library import sdxl_model_util, sdxl_train_util, train_util

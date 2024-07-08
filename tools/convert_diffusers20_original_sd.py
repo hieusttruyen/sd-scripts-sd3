@@ -6,7 +6,7 @@ import torch
 from diffusers import StableDiffusionPipeline
 
 import library.model_util as model_util
-from library.utils import setup_logging
+
 
 
 

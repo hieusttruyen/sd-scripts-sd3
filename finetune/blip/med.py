@@ -42,7 +42,7 @@ from transformers.modeling_utils import (
     find_pruneable_heads_and_indices,
     prune_linear_layer,
 )
-from transformers.utils import logging
+from transformers.utils 
 from transformers.models.bert.configuration_bert import BertConfig
 
 

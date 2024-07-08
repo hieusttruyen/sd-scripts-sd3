@@ -15,7 +15,7 @@ import os
 from anime_face_detector import create_detector
 from tqdm import tqdm
 import numpy as np
-from library.utils import setup_logging
+
 
 
 

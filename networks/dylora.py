@@ -17,7 +17,7 @@ from diffusers import AutoencoderKL
 from transformers import CLIPTextModel
 import torch
 from torch import nn
-from library.utils import setup_logging
+
 
 
 

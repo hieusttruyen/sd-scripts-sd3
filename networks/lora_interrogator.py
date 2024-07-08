@@ -12,7 +12,7 @@ init_ipex()
 
 import library.model_util as model_util
 import lora
-from library.utils import setup_logging
+
 
 
 

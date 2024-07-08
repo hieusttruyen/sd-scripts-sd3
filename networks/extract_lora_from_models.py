@@ -11,7 +11,7 @@ from safetensors.torch import load_file, save_file
 from tqdm import tqdm
 from library import sai_model_spec, model_util, sdxl_model_util
 import lora
-from library.utils import setup_logging
+
 
 
 

@@ -19,7 +19,7 @@ from torchvision.transforms.functional import InterpolationMode
 sys.path.append(os.path.dirname(__file__))
 from blip.blip import blip_decoder, is_url
 import library.train_util as train_util
-from library.utils import setup_logging
+
 
 
 

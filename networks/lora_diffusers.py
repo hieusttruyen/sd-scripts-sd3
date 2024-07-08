@@ -14,7 +14,7 @@ import torch
 from library.device_utils import init_ipex, get_preferred_device
 init_ipex()
 
-from library.utils import setup_logging
+
 
 
 

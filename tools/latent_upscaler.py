@@ -17,7 +17,7 @@ init_ipex()
 from torch import nn
 from tqdm import tqdm
 from PIL import Image
-from library.utils import setup_logging
+
 
 
 

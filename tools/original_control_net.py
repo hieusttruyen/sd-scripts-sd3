@@ -7,7 +7,7 @@ from safetensors.torch import load_file
 from library.original_unet import UNet2DConditionModel, SampleOutput
 
 import library.model_util as model_util
-from library.utils import setup_logging
+
 
 
 

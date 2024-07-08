@@ -14,7 +14,7 @@ from transformers import CLIPTextModel
 import numpy as np
 import torch
 import re
-from library.utils import setup_logging
+
 
 
 
