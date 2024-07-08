@@ -26,7 +26,7 @@ from diffusers.models.modeling_utils import ModelMixin
 from diffusers.models.unet_2d_blocks import UNetMidBlock2D, get_down_block, get_up_block
 from diffusers.models.vae import DecoderOutput, DiagonalGaussianDistribution
 from diffusers.models.autoencoder_kl import AutoencoderKLOutput
-from .utils import setup_logging
+
 
 
 

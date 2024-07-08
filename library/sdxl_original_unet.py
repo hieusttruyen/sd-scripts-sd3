@@ -30,7 +30,7 @@ import torch.utils.checkpoint
 from torch import nn
 from torch.nn import functional as F
 from einops import rearrange
-from .utils import setup_logging
+
 
 
 

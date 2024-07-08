@@ -40,7 +40,7 @@ from .train_util import (
     ControlNetDataset,
     DatasetGroup,
 )
-from .utils import setup_logging
+
 
 
 

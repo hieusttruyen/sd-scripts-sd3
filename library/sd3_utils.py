@@ -5,7 +5,7 @@ import safetensors
 from safetensors.torch import load_file
 from accelerate import init_empty_weights
 
-from .utils import setup_logging
+
 
 
 
