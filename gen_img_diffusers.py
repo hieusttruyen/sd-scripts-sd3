@@ -3491,7 +3491,7 @@ def main(args):
 def setup_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
 
-    add_logging_arguments(parser)
+    
 
     parser.add_argument(
         "--v2", action="store_true", help="load Stable Diffusion v2.0 model / Stable Diffusion 2.0のモデルを読み込む"

@@ -2940,7 +2940,7 @@ def main(args):
 def setup_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
 
-    add_logging_arguments(parser)
+    
 
     parser.add_argument(
         "--sdxl", action="store_true", help="load Stable Diffusion XL model / Stable Diffusion XLのモデルを読み込む"
