@@ -4,7 +4,7 @@ from pathlib import Path
 import argparse
 import os
 from library.utils import fire_in_thread
-from library.utils import setup_logging
+
 
 
 

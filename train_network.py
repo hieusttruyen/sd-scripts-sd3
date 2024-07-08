@@ -38,12 +38,12 @@ from library.custom_train_functions import (
     apply_debiased_estimation,
     apply_masked_loss,
 )
+from library.utils import setup_logging, add_logging_arguments
 
+setup_logging()
+import logging
 
-
-
-
-
+logger = logging.getLogger(__name__)
 
 
 class NetworkTrainer:
@@ -140,7 +140,7 @@ class NetworkTrainer:
         train_util.verify_training_args(args)
         train_util.prepare_dataset_args(args, True)
         deepspeed_utils.prepare_deepspeed_args(args)
-        
+        setup_logging(args, reset=True)
 
         cache_latents = args.cache_latents
         use_dreambooth_method = args.in_json is None
@@ -158,18 +158,18 @@ class NetworkTrainer:
         if args.dataset_class is None:
             blueprint_generator = BlueprintGenerator(ConfigSanitizer(True, True, args.masked_loss, True))
             if use_user_config:
-                print(f"Loading dataset config from {args.dataset_config}")
+                logger.info(f"Loading dataset config from {args.dataset_config}")
                 user_config = config_util.load_user_config(args.dataset_config)
                 ignored = ["train_data_dir", "reg_data_dir", "in_json"]
                 if any(getattr(args, attr) is not None for attr in ignored):
-                    print(
+                    logger.warning(
                         "ignoring the following options because config file is found: {0} / 設定ファイルが利用されるため以下のオプションは無視されます: {0}".format(
                             ", ".join(ignored)
                         )
                     )
             else:
                 if use_dreambooth_method:
-                    print("Using DreamBooth method.")
+                    logger.info("Using DreamBooth method.")
                     user_config = {
                         "datasets": [
                             {
@@ -180,7 +180,7 @@ class NetworkTrainer:
                         ]
                     }
                 else:
-                    print("Training with captions.")
+                    logger.info("Training with captions.")
                     user_config = {
                         "datasets": [
                             {
@@ -209,7 +209,7 @@ class NetworkTrainer:
             train_util.debug_dataset(train_dataset_group)
             return
         if len(train_dataset_group) == 0:
-            print(
+            logger.error(
                 "No data found. Please verify arguments (train_data_dir must be the parent of folders with images) / 画像がありません。引数指定を確認してください（train_data_dirには画像があるフォルダではなく、画像があるフォルダの親フォルダを指定する必要があります）"
             )
             return
@@ -222,7 +222,7 @@ class NetworkTrainer:
         self.assert_extra_args(args, train_dataset_group)
 
         # acceleratorを準備する
-        print("preparing accelerator")
+        logger.info("preparing accelerator")
         accelerator = train_util.prepare_accelerator(args)
         is_main_process = accelerator.is_main_process
 
@@ -313,7 +313,7 @@ class NetworkTrainer:
         if hasattr(network, "prepare_network"):
             network.prepare_network(args)
         if args.scale_weight_norms and not hasattr(network, "apply_max_norm_regularization"):
-            print(
+            logger.warning(
                 "warning: scale_weight_norms is specified but the network does not support it / scale_weight_normsが指定されていますが、ネットワークが対応していません"
             )
             args.scale_weight_norms = False
@@ -347,7 +347,7 @@ class NetworkTrainer:
                 trainable_params = results
                 lr_descriptions = None
         except TypeError as e:
-            # print(f"{e}")
+            # logger.warning(f"{e}")
             # accelerator.print(
             #     "Deprecated: use prepare_optimizer_params(text_encoder_lr, unet_lr, learning_rate) instead of prepare_optimizer_params(text_encoder_lr, unet_lr)"
             # )
@@ -507,7 +507,7 @@ class NetworkTrainer:
             # save current ecpoch and step
             train_state_file = os.path.join(output_dir, "train_state.json")
             # +1 is needed because the state is saved before current_step is set from global_step
-            print(f"save train state to {train_state_file} at epoch {current_epoch.value} step {current_step.value+1}")
+            logger.info(f"save train state to {train_state_file} at epoch {current_epoch.value} step {current_step.value+1}")
             with open(train_state_file, "w", encoding="utf-8") as f:
                 json.dump({"current_epoch": current_epoch.value, "current_step": current_step.value + 1}, f)
 
@@ -530,7 +530,7 @@ class NetworkTrainer:
                 with open(train_state_file, "r", encoding="utf-8") as f:
                     data = json.load(f)
                 steps_from_state = data["current_step"]
-                print(f"load train state from {train_state_file}: {data}")
+                logger.info(f"load train state from {train_state_file}: {data}")
 
         accelerator.register_save_state_pre_hook(save_model_hook)
         accelerator.register_load_state_pre_hook(load_model_hook)
@@ -780,7 +780,7 @@ class NetworkTrainer:
         if args.initial_epoch is not None or args.initial_step is not None:
             # if initial_epoch or initial_step is specified, steps_from_state is ignored even when resuming
             if steps_from_state is not None:
-                print(
+                logger.warning(
                     "steps from the state is ignored because initial_step is specified / initial_stepが指定されているため、stateからのステップ数は無視されます"
                 )
             if args.initial_step is not None:
@@ -810,10 +810,10 @@ class NetworkTrainer:
             if args.skip_until_initial_step:
                 # if skip_until_initial_step is specified, load data and discard it to ensure the same data is used
                 if not args.resume:
-                    print(
+                    logger.info(
                         f"initial_step is specified but not resuming. lr scheduler will be started from the beginning / initial_stepが指定されていますがresumeしていないため、lr schedulerは最初から始まります"
                     )
-                print(f"skipping {initial_step} steps / {initial_step}ステップをスキップします")
+                logger.info(f"skipping {initial_step} steps / {initial_step}ステップをスキップします")
                 initial_step *= args.gradient_accumulation_steps
 
                 # set epoch to start to make initial_step less than len(train_dataloader)
@@ -883,7 +883,7 @@ class NetworkTrainer:
         # training loop
         if initial_step > 0:  # only if skip_until_initial_step is specified
             for skip_epoch in range(epoch_to_start):  # skip epochs
-                print(f"skipping epoch {skip_epoch+1} because initial_step (multiplied) is {initial_step}")
+                logger.info(f"skipping epoch {skip_epoch+1} because initial_step (multiplied) is {initial_step}")
                 initial_step -= len(train_dataloader)
             global_step = initial_step
 
@@ -1101,7 +1101,7 @@ class NetworkTrainer:
             ckpt_name = train_util.get_last_ckpt_name(args, "." + args.save_model_as)
             save_model(ckpt_name, network, global_step, num_train_epochs, force_sync_upload=True)
 
-            print("model saved.")
+            logger.info("model saved.")
 
 
 def setup_parser() -> argparse.ArgumentParser:

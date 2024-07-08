@@ -518,5 +518,3 @@ masterpiece, best quality, 1boy, in business suit, standing at street, looking b
   * `--s` Specifies the number of steps in the generation.
 
   The prompt weighting such as `( )` and `[ ]` are working.
-#   s d - s c r i p t s - s d 3  
- 

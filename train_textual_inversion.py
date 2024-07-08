@@ -33,12 +33,12 @@ from library.custom_train_functions import (
     apply_debiased_estimation,
     apply_masked_loss,
 )
+from library.utils import setup_logging, add_logging_arguments
 
+setup_logging()
+import logging
 
-
-
-
-
+logger = logging.getLogger(__name__)
 
 imagenet_templates_small = [
     "a photo of a {}",
@@ -175,7 +175,7 @@ class TextualInversionTrainer:
 
         train_util.verify_training_args(args)
         train_util.prepare_dataset_args(args, True)
-        
+        setup_logging(args, reset=True)
 
         cache_latents = args.cache_latents
 
@@ -186,7 +186,7 @@ class TextualInversionTrainer:
         tokenizers = tokenizer_or_list if isinstance(tokenizer_or_list, list) else [tokenizer_or_list]
 
         # acceleratorを準備する
-        print("prepare accelerator")
+        logger.info("prepare accelerator")
         accelerator = train_util.prepare_accelerator(args)
 
         # mixed precisionに対応した型を用意しておき適宜castする
@@ -296,7 +296,7 @@ class TextualInversionTrainer:
                         ]
                     }
                 else:
-                    print("Train with captions.")
+                    logger.info("Train with captions.")
                     user_config = {
                         "datasets": [
                             {
@@ -744,7 +744,7 @@ class TextualInversionTrainer:
             ckpt_name = train_util.get_last_ckpt_name(args, "." + args.save_model_as)
             save_model(ckpt_name, updated_embs_list, global_step, num_train_epochs, force_sync_upload=True)
 
-            print("model saved.")
+            logger.info("model saved.")
 
 
 def setup_parser() -> argparse.ArgumentParser:

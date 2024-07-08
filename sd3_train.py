@@ -24,12 +24,12 @@ from library import deepspeed_utils, sd3_models, sd3_train_utils, sd3_utils
 
 import library.train_util as train_util
 
+from library.utils import setup_logging, add_logging_arguments
 
+setup_logging()
+import logging
 
-
-
-
-
+logger = logging.getLogger(__name__)
 
 import library.config_util as config_util
 
@@ -55,7 +55,7 @@ def train(args):
     train_util.prepare_dataset_args(args, True)
     # sdxl_train_util.verify_sdxl_training_args(args)
     deepspeed_utils.prepare_deepspeed_args(args)
-    
+    setup_logging(args, reset=True)
 
     assert (
         not args.weighted_captions
@@ -95,18 +95,18 @@ def train(args):
     if args.dataset_class is None:
         blueprint_generator = BlueprintGenerator(ConfigSanitizer(True, True, args.masked_loss, True))
         if args.dataset_config is not None:
-            print(f"Load dataset config from {args.dataset_config}")
+            logger.info(f"Load dataset config from {args.dataset_config}")
             user_config = config_util.load_user_config(args.dataset_config)
             ignored = ["train_data_dir", "in_json"]
             if any(getattr(args, attr) is not None for attr in ignored):
-                print(
+                logger.warning(
                     "ignore following options because config file is found: {0} / 設定ファイルが利用されるため以下のオプションは無視されます: {0}".format(
                         ", ".join(ignored)
                     )
                 )
         else:
             if use_dreambooth_method:
-                print("Using DreamBooth method.")
+                logger.info("Using DreamBooth method.")
                 user_config = {
                     "datasets": [
                         {
@@ -117,7 +117,7 @@ def train(args):
                     ]
                 }
             else:
-                print("Training with captions.")
+                logger.info("Training with captions.")
                 user_config = {
                     "datasets": [
                         {
@@ -147,7 +147,7 @@ def train(args):
         train_util.debug_dataset(train_dataset_group, True)
         return
     if len(train_dataset_group) == 0:
-        print(
+        logger.error(
             "No data found. Please verify the metadata file and train_data_dir option. / 画像がありません。メタデータおよびtrain_data_dirオプションを確認してください。"
         )
         return
@@ -163,7 +163,7 @@ def train(args):
         ), "when caching text encoder output, either caption_dropout_rate, shuffle_caption, token_warmup_step or caption_tag_dropout_rate cannot be used / text encoderの出力をキャッシュするときはcaption_dropout_rate, shuffle_caption, token_warmup_step, caption_tag_dropout_rateは使えません"
 
     # acceleratorを準備する
-    print("prepare accelerator")
+    logger.info("prepare accelerator")
     accelerator = train_util.prepare_accelerator(args)
 
     # mixed precisionに対応した型を用意しておき適宜castする
@@ -362,7 +362,7 @@ def train(args):
             optimizers.append(optimizer)
         optimizer = optimizers[0]  # avoid error in the following code
 
-        print(f"using {len(optimizers)} optimizers for fused optimizer groups")
+        logger.info(f"using {len(optimizers)} optimizers for fused optimizer groups")
 
     else:
         _, _, optimizer = train_util.get_optimizer(args, trainable_params=params_to_optimize)
@@ -875,7 +875,7 @@ def train(args):
             mmdit,
             vae,
         )
-        print("model saved.")
+        logger.info("model saved.")
 
 
 def setup_parser() -> argparse.ArgumentParser:
